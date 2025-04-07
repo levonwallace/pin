@@ -1,0 +1,30 @@
+mike: Chat was was accidently cleared
+mike: I fixed what was causing that to happen
+mike: Cosmetic updates / UX improvements / P2P DMs inside of rooms
+mike: Chats now support large text / post
+thanks god: Hunter Biden DJ Set for Johnny Hollywood's Illustrated Kubark Manual Old Flings April 23rd https://partiful.com/e/DZvPkmdVJC657e1jlp7K
+thanks god: NYC
+thanks god: Partiful logo The Kubark Manual Launch Party Wednesday, Apr 23 8:00pm Hosted by On April 23rd we will be rocking out for Johnny Hollywood's illustrated Kubark Manual  Featuring Readings From: Sierra Armor Cassidy Grady Chloe Wheeler Jonah Howell thanks god NK Johnny Hollywood  DJ Sets By: Hunter Biden  Coldsteel Papa
+mike: Today is Sunday
+mike: Long text post are fixed.
+mike: https://www.richardwilsonsculptor.com/sculpture/red-hot-2010.html
+mike: Links are now supported
+mike: P2P DMs work. You have to be inside of the same Pin then click a username to open a chat window.
+take one take two: function
+mike: this is line break supported 
+text area
+
+
+
+
+
+
+adsfasdfa
+mike: *line break supported on desktop
+mike: - Added DM functionality {{newline}}- Updated mobile experience {{newline}}- Added linebreak functionality on desktop so you can type like this {{newline}}- Made the pins look like actual pins
+mike: - Removed focus state zoom on mobile so typing is easier
+it's me: - links are supported
+Dovetail: Image sharing or no
+take one take two: img sharing possible. debating pro and con. need to content moderate / content delivery.
+take one take two: this wjoke
+take one take two: this *whole site rn is like 4mb

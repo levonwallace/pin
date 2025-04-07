@@ -1,0 +1,86 @@
+[
+    {
+        "from": "take one take two",
+        "to": "dufflebag",
+        "text": "wzzup",
+        "timestamp": 1743964996,
+        "unread": false
+    },
+    {
+        "from": "take one take two",
+        "to": "dufflebag",
+        "text": "yo",
+        "timestamp": 1743965003,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "test",
+        "timestamp": 1743965085,
+        "unread": false
+    },
+    {
+        "from": "take one take two",
+        "to": "dufflebag",
+        "text": "hello",
+        "timestamp": 1743965096,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "https:\/\/soundcloud.com\/dufflebag-411757390\/miami\/s-KCWo6OitfdN?si=239a14b8a5884441888233157bcc9591&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing",
+        "timestamp": 1743965204,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "u gotta have link embedded",
+        "timestamp": 1743965220,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "or nah",
+        "timestamp": 1743965226,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "hm",
+        "timestamp": 1743965227,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "bump that tho",
+        "timestamp": 1743965234,
+        "unread": false
+    },
+    {
+        "from": "dufflebag",
+        "to": "take one take two",
+        "text": "it bangs",
+        "timestamp": 1743965236,
+        "unread": false
+    },
+    {
+        "from": "take one take two",
+        "to": "dufflebag",
+        "text": "I'ma check it",
+        "timestamp": 1743965261,
+        "unread": false
+    },
+    {
+        "from": "take one take two",
+        "to": "dufflebag",
+        "text": "wzzup",
+        "timestamp": 1744003407,
+        "unread": true
+    }
+]

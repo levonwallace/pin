@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pin</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: white;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: black;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+    }
+
+    .carousel-container {
+      width: 90%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    .carousel-image {
+      width: 100%;
+      border: 2px solid black;
+      border-radius: 8px;
+      height: auto;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .nav-buttons button {
+      padding: 10px 20px;
+      font-weight: bold;
+      border: 2px solid black;
+      background: black;
+      color: white;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-buttons button:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+
+    .dot.active {
+      background: black;
+    }
+
+    .start-btn {
+      margin-top: 40px;
+      padding: 12px 24px;
+      background: black;
+      color: white;
+      border: none;
+      font-size: 16px;
+      font-weight: 400;
+      cursor: pointer;
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    .start-btn:hover {
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" style="text-decoration:none;"><h1>Pin</h1></a>
+
+  <div class="carousel-container">
+    <img id="carouselImage" class="carousel-image" src="img1.jpg" alt="Step 1" />
+
+    <div class="nav-buttons">
+      <button id="prevBtn" onclick="prevSlide()">Back</button>
+      <button id="nextBtn" onclick="nextSlide()">Next</button>
+    </div>
+
+    <div class="dots" id="dotsContainer"></div>
+  </div>
+
+  <a href="chat.html"><button class="start-btn" id="startBtn">Chat</button></a>
+
+  <script>
+    const images = ["P1.png", "P2.png", "P3.png", "P4.png"]; // Update with your image paths
+    let currentIndex = 0;
+
+    const imgEl = document.getElementById("carouselImage");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const startBtn = document.getElementById("startBtn");
+    const dotsContainer = document.getElementById("dotsContainer");
+
+    function renderDots() {
+      dotsContainer.innerHTML = "";
+      images.forEach((_, index) => {
+        const dot = document.createElement("div");
+        dot.className = "dot" + (index === currentIndex ? " active" : "");
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    function updateSlide() {
+      imgEl.src = images[currentIndex];
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === images.length - 1;
+      startBtn.style.display = currentIndex === images.length - 1 ? "inline-block" : "none";
+      renderDots();
+    }
+
+    function nextSlide() {
+      if (currentIndex < images.length - 1) {
+        currentIndex++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateSlide();
+      }
+    }
+
+    updateSlide();
+  </script>
+
+</body>
+</html>

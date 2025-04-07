@@ -1,0 +1,16 @@
+[
+    {
+        "from": "take one take two",
+        "to": "Guy Fieri",
+        "text": "yoooo",
+        "timestamp": 1743993380,
+        "unread": false
+    },
+    {
+        "from": "Guy Fieri",
+        "to": "take one take two",
+        "text": "Ayoooo waddup",
+        "timestamp": 1743993394,
+        "unread": false
+    }
+]

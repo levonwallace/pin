@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=.7, minimum-scale=.7, maximum-scale=.7">
+  <title>Pin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <style>
+    /* Target all input fields specifically */
+    input[type="text"], textarea {
+      font-size: 16px !important; /* iOS won't zoom if font size is 16px or larger */
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+    }
+    
+    /* Specifically target the chat input and DM input */
+    #messageInput, .dm-input {
+      font-size: 16px !important;
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    @media screen and (max-width: 600px) {
+      input, textarea, select {
+        font-size: 16px !important; /* Reinforces the rule for mobile */
+      }
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow-x: scroll !important;
+      overflow-y: hidden;
+      background: white;
+      font-family: "Inter", sans-serif;
+    }
+
+    /* Make play-area very wide */
+    #play-area {
+      position: relative;
+      width: 15000px;
+      height: 100vh;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* ✅ Custom black scrollbar (WebKit) */
+    body::-webkit-scrollbar {
+      height: 18px;
+    }
+    body::-webkit-scrollbar-track {
+      background: #ddd;
+    }
+    body::-webkit-scrollbar-thumb {
+      background: black;
+      border-radius: 4px;
+      border: 4px solid #ddd;
+    }
+
+    /* ✅ Firefox scrollbar */
+    body {
+      scrollbar-color: black #ddd;
+      scrollbar-width: thin;
+    }
+
+    #avatar {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      text-align: center;
+    }
+
+    #avatar .dot {
+      width: 10px;
+      height: 10px;
+      background: black;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+
+    #login {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+#chat {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  bottom: 50px;
+  left: 5%;
+  width: 50%;
+  height: 300px;
+  background: white;
+  box-sizing: border-box;
+  border: 1px solid black;
+  z-index: 50;
+}
+
+#chat.collapsed {
+  height: 28px; /* Just show the header bar */
+  bottom: 50px;
+  min-height: 34px; /* Enough to show a full border */
+}
+
+#chatTitle {
+  font-weight: bold;
+  /*padding: 5px 10px;*/
+  background:white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#chatMinimizeBtn {
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.expand-btn {
+  background: black;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0 6px;
+  font-size: 12px;
+  margin-left: 2px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  transition: background-color 0.2s;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.expand-btn:hover {
+  background: #333;
+}
+
+#chatBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+
+
+    #input-area {
+      display: flex;
+      padding: 10px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+
+    #input-area input[type="text"] {
+      flex: 1;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    #input-area button {
+      padding: 5px 10px;
+      margin-left: 5px;
+    }
+
+    .message {
+      margin-bottom: 8px;
+      line-height: 1.4;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .message .username {
+      font-weight: bold;
+      color: blue;
+      margin-right: 4px;
+    }
+
+    .message .chat-preview {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .timestamp {
+      color: gray;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+
+    .username {
+      font-weight: bold;
+      color: blue;
+    }
+
+    .pin {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      color: black;
+    }
+
+    .pin-head {
+      width: 8px;
+      height: 8px;
+      background: black;
+      margin: 2px auto;
+    }
+
+    .pin-line {
+      width: 2px;
+      height: 20px;
+      background: black;
+      margin: 0 auto;
+    }
+
+    .pin-label {
+      margin-top: 4px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #pinSidebar button:hover {
+      background: #eaeaea;
+    }
+
+    @media screen and (max-width: 857px) {
+      #chat {
+        width: calc(100% - 40px) !important;
+        left: 20px !important;
+        transform: none !important;
+        bottom: 20px;
+        height: 300px;
+      }
+
+      #input-area {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      #input-area input[type="text"] {
+        flex: 1;
+        min-width: 0;
+      }
+
+      #input-area button {
+        width: auto;
+        margin-left: 0;
+        white-space: nowrap;
+      }
+
+      /* Match DM chat box to main chat box on mobile */
+      .dm-chat-box {
+        width: calc(100% - 40px) !important;
+        height: 300px !important;
+        left: 20px !important;
+        right: auto !important;
+        bottom: 20px !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      #pinSidebar {
+        right: auto;
+        left: 10px;
+        width: auto;
+        max-width: 200px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        border: 1px solid black;
+        box-sizing: border-box;
+      }
+
+      #pinSidebar.expanded {
+        transform: translateX(0);
+      }
+
+      #pinToggle {
+        display: block;
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+    
+    #pinSidebar.collapsed #pinContent {
+  display: none;
+}
+
+#pinSidebar.collapsed {
+  /* Optionally adjust the width/padding when collapsed */
+  width: 160px;
+  padding: 8px;
+}
+
+
+
+.dm-chat-box {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  height: 400px;
+  background: white;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  font-family: 'Inter', sans-serif;
+}
+
+.dm-header {
+  padding: 8px;
+  background: #f8f8f8;
+  border-bottom: 1px solid black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.dm-close {
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+/* Add chat bubble indicator */
+.has-chat::after {
+  content: "💬";
+  font-size: 12px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.dm-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dm-messages .message {
+  max-width: 80%;
+  padding: 8px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+.dm-messages .message.sent {
+  align-self: flex-end;
+  background: #e3f2fd;
+}
+
+.dm-messages .message.received {
+  align-self: flex-start;
+  background: #f5f5f5;
+}
+
+.dm-input-area {
+  padding: 8px;
+  border-top: 1px solid black;
+  display: flex;
+  gap: 8px;
+}
+
+.dm-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+}
+
+.dm-send {
+  padding: 8px 16px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.dm-notification {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+  margin-left: 4px;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+@media screen and (max-width: 857px) {
+  .dm-chat-box {
+    width: calc(100% - 40px) !important;
+    height: 300px !important;
+    left: 20px !important;
+    right: auto !important;
+    bottom: 20px !important;
+  }
+}
+
+
+
+  </style>
+</head>
+
+<body>
+  <div id="play-area">
+    <button
+      id="backButton"
+      onclick="exitRoom()"
+      style="
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        display: none;
+        background: none;
+        color: black;
+        border: none;
+        padding: 8px 16px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: underline;
+      "
+    >
+      ← Back
+    </button>
+    <div id="avatar" style="display: none;">
+      <div id="avatarName"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div id="login">
+    <form onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 8px;">
+      <label for="usernameInput" style="font-weight: bold; font-size: 14px;"
+        >Username</label
+      >
+      <div style="display: flex; border: 1px solid black; border-radius: 0; overflow: hidden;">
+        <input
+          type="text"
+          id="usernameInput"
+          placeholder="Enter your name"
+          style="
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            border: none;
+            outline: none;
+          "
+        />
+        <button
+          type="submit"
+          style="
+            background: black;
+            color: white;
+            border: none;
+            padding: 0 24px;
+            font-size: 14px;
+            cursor: pointer;
+          "
+        >
+          Login
+        </button>
+      </div>
+    </form>
+  </div>
+
+<!-- Existing #chat container -->
+<div id="chat" style="display: none;">
+
+  <!-- 1) Add a clickable "header" row to collapse/expand -->
+  <div id="chatHeader" style="
+    cursor: pointer;
+    background:white;
+    padding: 6px 10px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+  ">
+    <!-- Chat Title on the left -->
+    <span id="chatTitle">Room: General</span>
+    <!-- Arrow on the right -->
+    <span id="chatToggleArrow" style="font-size: 16px;">–</span>
+  </div>
+
+  <!-- 2) Wrap existing chat contents in a new #chatBody container -->
+  <div id="chatBody" style="flex: 1; display: flex; flex-direction: column;">
+    <!-- The old "chatContext" can be removed or replaced by #chatTitle above,
+         but if you want to keep it, you can hide it or place it inside chatBody. -->
+
+    <div id="messages" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 14px; box-sizing: border-box;"></div>
+    
+    <div id="input-area" style="display: flex; padding: 10px; box-sizing: border-box;">
+      <textarea
+        id="messageInput"
+        placeholder="Type a message..."
+        style="flex: 1; padding: 8px 12px; font-size: 14px; border: none; outline: none; resize: none; min-height: 20px; max-height: 120px; overflow-y: auto; font-family: 'Inter', sans-serif;"
+      ></textarea>
+      <button
+        onclick="sendMessage()"
+        style="background: black; color: white; border: none; padding: 0 24px; font-size: 14px; cursor: pointer;"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Create Pin Button -->
+<a
+  id="createPinBtn"
+  style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    text-decoration: underline;
+    color: black;
+    background: none;
+    border: none;
+    cursor: pointer;
+  "
+>
+    Create a Pin
+  </a>
+
+  <!--<div-->
+  <!--  id="pinSidebar"-->
+  <!--  style="-->
+  <!--    display: none;-->
+  <!--    position: fixed;-->
+  <!--    top: 10px;-->
+  <!--    right: 10px;-->
+  <!--    width: 320px;-->
+  <!--    background: white;-->
+  <!--    border: 1px solid black;-->
+  <!--    box-sizing: border-box;-->
+  <!--    padding: 16px;-->
+  <!--    font-family: 'Inter', sans-serif;-->
+  <!--    font-size: 14px;-->
+  <!--    line-height: 1.4;-->
+  <!--    z-index: 20;-->
+  <!--  "-->
+  <!-->-->
+  <!--  <div-->
+  <!--    id="pinToggle"-->
+  <!--    style="display: none; cursor: pointer; margin-bottom: 12px; font-weight: bold;"-->
+  <!--  >-->
+  <!--    Pins <span id="pinToggleArrow">←</span>-->
+  <!--  </div>-->
+  <!--  <div style="font-weight: bold; margin-bottom: 12px;">Pins</div>-->
+  <!--  <div-->
+  <!--    id="pinList"-->
+  <!--    style="-->
+  <!--      margin-bottom: 16px;-->
+  <!--      max-height: 200px;-->
+  <!--      overflow-y: auto;-->
+  <!--      padding-right: 6px;-->
+  <!--    "-->
+  <!--  ></div>-->
+  <!--  <div-->
+  <!--    id="showMore"-->
+  <!--    style="text-decoration: underline; cursor: pointer; margin-bottom: 16px;"-->
+  <!--  >-->
+  <!--    Show More-->
+  <!--  </div>-->
+  <!--  <div style="font-weight: bold; margin-bottom: 4px;">My Pins</div>-->
+  <!--  <div id="myPinList" style="color: #777; font-size: 13px;">No Pins added</div>-->
+  <!--  <div id="generalBtnContainer" style="margin-top: 20px;"></div>-->
+  <!--</div>-->
+  
+  <div
+  id="pinSidebar"
+  style="
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 320px;
+    background: white;
+    border: 1px solid black;
+    box-sizing: border-box;
+    padding: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    z-index: 20;
+  "
+>
+  <!-- Header Row -->
+  <div
+    id="pinHeader"
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 12px;
+    "
+  >
+    <div style="font-weight: bold;">Pins</div>
+    <!-- Collapse/Expand Button -->
+    <div id="pinCollapseBtn" style="font-size: 20px; line-height: 1;">–</div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="pinContent">
+    <div
+      id="pinList"
+      style="
+        margin-bottom: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 6px;
+      "
+    ></div>
+    <div
+      id="showMore"
+      style="text-decoration: underline; cursor: pointer; margin-bottom: 16px;"
+    >
+      Show More
+    </div>
+    <div style="font-weight: bold; margin-bottom: 4px;">My Pins</div>
+    <div id="myPinList" style="color: #777; font-size: 13px;">No Pins added</div>
+    <div id="generalBtnContainer" style="margin-top: 20px;"></div>
+  </div>
+</div>
+
+
+
+
+
+<div
+  id="roomUsersBox"
+  style="
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 320px;
+    background: white;
+    border: 1px solid black;
+    padding: 16px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    z-index: 100;
+  "
+>
+    <div style="font-weight: bold; margin-bottom: 12px;">Active</div>
+    <div id="roomUsersList"></div>
+  </div>
+
+  <script>
+    // Debug function to log DM-related events
+    function debugDM(action, data) {
+      console.log(`[DM Debug] ${action}:`, data);
+    }
+    
+    // Override the fetch function to log DM-related requests
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (url.includes('read_dm.php') || url.includes('send_dm.php') || url.includes('check_unread_dms.php')) {
+        debugDM('Fetch Request', { url, options });
+        return originalFetch(url, options)
+          .then(response => {
+            debugDM('Fetch Response', { url, status: response.status });
+            // Clone the response so we can read it twice
+            const clone = response.clone();
+            clone.text().then(text => {
+              try {
+                const json = JSON.parse(text);
+                debugDM('Response Data', { url, data: json });
+              } catch (e) {
+                debugDM('Response Text', { url, text });
+              }
+            });
+            return response;
+          })
+          .catch(error => {
+            debugDM('Fetch Error', { url, error });
+            throw error;
+          });
+      }
+      return originalFetch(url, options);
+    };
+    
+    let username = "";
+    let x = 100;
+    let y = 100;
+    const speed = 10;
+    let insideRoom = false;
+    let currentContext = "General";
+    
+// --- Normalization and banned word check ---
+
+function normalizeText(text) {
+  return ( 
+      text
+    .toLowerCase()
+    .replace(/[^a-z]/g, '') 
+    .replace(/g+/g, 'gg')  
+    .replace(/i+/g, 'i')   
+    .replace(/e+/g, 'e')    
+    .replace(/r+/g, 'r')   
+    .replace(/n+/g, 'n')
+    .replace(/f+/g, 'f') 
+    .replace(/a+/g, 'a') 
+    .replace(/o+/g, 'o') 
+    .replace(/t+/g, 't') 
+    );
+}
+
+
+const bannedWords = ["nigger", "nigr", "niggr", "niggar",
+"fag", "faggot", "niggerfag", "niggerfagot", "niggerfaggot", "faget", "nigfag"];
+
+
+function containsBannedWord(text) {
+  const normalized = normalizeText(text);
+  return bannedWords.some(word => normalized.includes(word));
+}
+
+function banUser(user) {
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "ban_user.php", true);
+  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhr.send("user=" + encodeURIComponent(user));
+  window.location.href = "404.html"; 
+}
+
+// --- Modified sendMessage() function ---
+function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if (text !== "") {
+    if (containsBannedWord(text)) {
+      banUser(username);
+      return;
+    }
+    // Encode line breaks as a special character sequence that won't be affected by PHP
+    const encodedText = text.replace(/\n/g, "{{newline}}");
+    
+    // Otherwise, send the message as normal
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "send.php", true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.send("user=" + encodeURIComponent(username) +
+             "&message=" + encodeURIComponent(encodedText) +
+             "&context=" + encodeURIComponent(currentContext));
+    input.value = "";
+    input.focus();
+  }
+}
+
+
+    
+function generateCookieId() {
+  if (!localStorage.getItem("ban_cookie_id")) {
+    localStorage.setItem("ban_cookie_id", Math.random().toString(36).substr(2));
+  }
+  return localStorage.getItem("ban_cookie_id");
+}
+
+function login() {
+  const input = document.getElementById("usernameInput");
+  const rawUsername = input.value.trim();
+
+  if (rawUsername === "") return;
+
+  if (containsBannedWord(rawUsername)) {
+    alert("Denied.");
+    return;
+  }
+
+  username = rawUsername;
+  localStorage.setItem("aolchat_username", username);
+  document.getElementById("login").style.display = "none";
+  document.getElementById("chat").style.display = "flex";
+  document.getElementById("avatar").style.display = "block";
+  document.getElementById("avatarName").innerText = username;
+
+  document.getElementById("pinSidebar").style.display = "block";
+
+  moveAvatar();
+  scrollToAvatar();
+  loadMessages();
+  setInterval(loadMessages, 3000);
+
+  // ✅ Set ban-related cookies correctly
+  document.cookie = "chat_user=" + encodeURIComponent(username) + "; path=/";
+  document.cookie = "ban_cookie_id=" + generateCookieId() + "; path=/";
+}
+
+
+    fetch("ban_check.php").then(res => {
+  if (res.redirected) {
+    window.location.href = res.url;
+  }
+});
+
+  function customPrompt(message) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById("customPromptOverlay");
+      const messageBox = document.getElementById("customPromptMessage");
+      const input = document.getElementById("customPromptInput");
+      const okBtn = document.getElementById("customPromptOk");
+      const cancelBtn = document.getElementById("customPromptCancel");
+
+      messageBox.innerText = message;
+      input.value = "";
+      overlay.style.display = "flex";
+      input.focus();
+
+      okBtn.onclick = () => {
+        overlay.style.display = "none";
+        resolve(input.value.trim());
+      };
+
+      cancelBtn.onclick = () => {
+        overlay.style.display = "none";
+        resolve(null);
+      };
+    });
+  }
+
+
+
+    function moveAvatar() {
+      const avatar = document.getElementById("avatar");
+      avatar.style.left = x + "px";
+      avatar.style.top = y + "px";
+
+      // Save position
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "update_position.php", true);
+      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      xhr.send("user=" + encodeURIComponent(username) + "&x=" + x + "&y=" + y);
+    }
+
+    function scrollToAvatar() {
+      const playArea = document.getElementById("play-area");
+      playArea.scrollTo({
+        left: x - window.innerWidth / 2,
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (!username) return;
+      switch (e.key) {
+        case "ArrowUp":
+          y = Math.max(0, y - speed);
+          break;
+        case "ArrowDown":
+          y = Math.min(window.innerHeight - 150, y + speed);
+          break;
+        case "ArrowLeft":
+          x = Math.max(0, x - speed);
+          break;
+        case "ArrowRight":
+          x = Math.min(window.innerWidth - 50, x + speed);
+          break;
+      }
+      moveAvatar();
+    });
+
+//   function sendMessage() {
+//   const input = document.getElementById("messageInput");
+//   const text = input.value.trim();
+//   if (text !== "") {
+//     // Define a list of banned words (all in lowercase)
+//     const bannedWords = ["nigger"]; // Add any other banned words here
+//     const lowerText = text.toLowerCase();
+//     // If any banned word is found in the message, ban the user
+//     if (bannedWords.some(word => lowerText.includes(word))) {
+//       banUser(username);
+//       return; // Do not proceed to send the message
+//     }
+
+//     // Otherwise, send the message as normal
+//     const xhr = new XMLHttpRequest();
+//     xhr.open("POST", "send.php", true);
+//     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//     xhr.send(
+//       "user=" +
+//         encodeURIComponent(username) +
+//         "&message=" +
+//         encodeURIComponent(text) +
+//         "&context=" +
+//         encodeURIComponent(currentContext)
+//     );
+//     input.value = "";
+//     input.focus();
+//   }
+// }
+
+// function banUser(user) {
+//   // Send a request to the server to ban the user
+//   const xhr = new XMLHttpRequest();
+//   xhr.open("POST", "ban_user.php", true);
+//   xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//   xhr.send("user=" + encodeURIComponent(user));
+  
+//   // Optionally, notify the user and redirect them
+//   window.location.href = "404.html"; // Redirect to a banned notice page
+// }
+
+
+    function loadMessages() {
+      fetch("read.php?context=" + encodeURIComponent(currentContext))
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split("\n");
+          const container = document.getElementById("messages");
+          container.innerHTML = "";
+
+          lines.forEach((line) => {
+            const match = line.match(/^(.*?): (.*)$/);
+            if (!match) return;
+
+            const sender = match[1];
+            // Decode the special line break sequence back to actual line breaks
+            const message = match[2].replace(/{{newline}}/g, "\n");
+
+            // Truncate if > 250 chars
+            const maxLength = 250;
+            const isLong = message.length > maxLength;
+            const preview = isLong ? message.slice(0, maxLength) : message;
+
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "message";
+
+            const usernameSpan = document.createElement("span");
+            usernameSpan.className = "username";
+            usernameSpan.textContent = sender + ":";
+
+            const previewSpan = document.createElement("span");
+            previewSpan.className = "chat-preview";
+            previewSpan.style.whiteSpace = "pre-wrap";
+            
+            if (isLong) {
+              const formattedPreview = preview.replace(/\n/g, "<br>");
+              previewSpan.innerHTML = " " + renderFormatted(formattedPreview) + " ";
+              
+              const expandBtn = document.createElement("button");
+              expandBtn.className = "expand-btn";
+              expandBtn.textContent = "...";
+              expandBtn.onclick = function() {
+                showFullMessage(message);
+              };
+              previewSpan.appendChild(expandBtn);
+            } else {
+              const formattedMessage = message.replace(/\n/g, "<br>");
+              previewSpan.innerHTML = " " + renderFormatted(formattedMessage);
+            }
+
+            msgDiv.appendChild(usernameSpan);
+            msgDiv.appendChild(previewSpan);
+            container.appendChild(msgDiv);
+          });
+
+          // Scroll if near bottom
+          const nearBottom =
+            container.scrollTop + container.clientHeight >=
+            container.scrollHeight - 50;
+          if (nearBottom) container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    window.onload = () => {
+      const savedUser = localStorage.getItem("aolchat_username");
+      if (savedUser) {
+        document.getElementById("usernameInput").value = savedUser;
+        login();
+      }
+    };
+
+    document
+      .getElementById("messageInput")
+      .addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          if (e.shiftKey) {
+            // Allow shift+enter for line break
+            return;
+          }
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+    function renderOtherAvatars() {
+      Promise.all([
+        fetch("get_positions.php").then((res) => res.json()),
+        fetch("get_contexts.php").then((res) => res.json()),
+      ]).then(([positions, contexts]) => {
+        document.querySelectorAll(".remote-avatar").forEach((el) => el.remove());
+
+        for (const [user, pos] of Object.entries(positions)) {
+          if (user === username) continue;
+
+          const userRoom = contexts[user] && contexts[user].room
+            ? contexts[user].room
+            : "General";
+          if (userRoom !== currentContext) continue;
+
+          const remote = document.createElement("div");
+          remote.className = "remote-avatar";
+          remote.style.position = "absolute";
+          remote.style.left = pos.x + "px";
+          remote.style.top = pos.y + "px";
+          remote.style.textAlign = "center";
+
+          remote.innerHTML = `<div>${user}</div><div class="dot"></div>`;
+          document.getElementById("play-area").appendChild(remote);
+        }
+      });
+    }
+
+    setInterval(renderOtherAvatars, 3000);
+
+const pinSidebar = document.getElementById("pinSidebar");
+const pinCollapseBtn = document.getElementById("pinCollapseBtn");
+
+pinCollapseBtn.addEventListener("click", () => {
+  pinSidebar.classList.toggle("collapsed");
+  if (pinSidebar.classList.contains("collapsed")) {
+    pinCollapseBtn.textContent = "+";
+  } else {
+    pinCollapseBtn.textContent = "–";
+  }
+});
+
+    function loadPins() {
+      Promise.all([
+        fetch("get_pins.php").then((res) => res.json()),
+        fetch("get_contexts.php").then((res) => res.json()),
+      ]).then(([pins, contexts]) => {
+        console.log("📦 contexts from PHP:", contexts);
+        document.querySelectorAll(".pin").forEach((el) => el.remove());
+
+        const roomToUserCount = {};
+        for (const user in contexts) {
+          const room = contexts[user] && contexts[user].room
+            ? contexts[user].room
+            : "General";
+          if (!roomToUserCount[room]) roomToUserCount[room] = 0;
+          roomToUserCount[room]++;
+        }
+
+        Object.values(pins).forEach((pin) => {
+          const count = roomToUserCount[pin.title] || 0;
+
+          // If inside a pin room and this isn't the current pin, skip it
+          if (insideRoom && pin.title !== currentContext) return;
+
+          const el = document.createElement("div");
+          el.className = "pin";
+          el.style.position = "absolute";
+          el.style.left = pin.x + "px";
+          el.style.top = pin.y + "px";
+          el.style.textAlign = "center";
+          el.style.fontSize = "12px";
+          el.style.cursor = "pointer";
+          el.style.zIndex = "10";
+          el.style.pointerEvents = "auto";
+
+          el.innerHTML = `
+            <div><strong>${pin.title}</strong></div>
+            <div class="pin-head"></div>
+            <div class="pin-line"></div>
+            <div style="font-size: 10px;">${count}+ Users</div>
+          `;
+
+          el.addEventListener("click", () => {
+            if (!insideRoom) {
+              enterRoom(pin.title, pin.x, pin.y);
+            }
+          });
+
+          document.getElementById("play-area").appendChild(el);
+        });
+      });
+    }
+
+    setInterval(loadPins, 3000);
+    
+    
+        // Create Pin
+    document.getElementById("createPinBtn").addEventListener("click", () => {
+      customPrompt("Enter a title for your pin:").then((title) => {
+        if (!title) return;
+
+        fetch("get_pins.php")
+          .then((res) => res.json())
+          .then((pins) => {
+            let tooClose = false;
+            for (const pin of Object.values(pins)) {
+              const dx = pin.x - x;
+              const dy = pin.y - y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 60) {
+                tooClose = true;
+                break;
+              }
+            }
+
+            if (tooClose) {
+              customConfirm(
+                "That pin is too close to another one. Try a different spot."
+              ).then(() => {});
+              return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "create_pin.php", true);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhr.send(
+              "user=" +
+                encodeURIComponent(username) +
+                "&title=" +
+                encodeURIComponent(title) +
+                "&x=" +
+                x +
+                "&y=" +
+                y
+            );
+          });
+      });
+
+      // second fetch
+    //   fetch("get_pins.php")
+    //     .then((res) => res.json())
+    //     .then((pins) => {
+    //       let tooClose = false;
+    //       for (const pin of Object.values(pins)) {
+    //         const dx = pin.x - x;
+    //         const dy = pin.y - y;
+    //         const dist = Math.sqrt(dx * dx + dy * dy);
+    //         if (dist < 60) {
+    //           tooClose = true;
+    //           break;
+    //         }
+    //       }
+
+    //       if (tooClose) {
+    //         customConfirm(
+    //           "That pin is too close to another one. Try a different spot."
+    //         ).then(() => {});
+    //         return;
+    //       }
+
+    //       const xhr = new XMLHttpRequest();
+    //       xhr.open("POST", "create_pin.php", true);
+    //       xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    //       xhr.send(
+    //         "user=" +
+    //           encodeURIComponent(username) +
+    //           "&title=" +
+    //           encodeURIComponent(title) +
+    //           "&x=" +
+    //           x +
+    //           "&y=" +
+    //           y
+    //       );
+    //     });
+    });
+
+    function updateContext() {
+      if (insideRoom) return;
+      fetch("get_pins.php")
+        .then((res) => res.json())
+        .then((data) => {
+          let closest = "General";
+          let minDist = 9999;
+          Object.values(data).forEach((pin) => {
+            const dx = pin.x - x;
+            const dy = pin.y - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 50 && dist < minDist) {
+              closest = pin.title;
+              minDist = dist;
+            }
+          });
+          if (closest !== currentContext) {
+            currentContext = closest;
+            document.getElementById("chatTitle").innerText =
+              "Room: " + currentContext;
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "update_context.php", true);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhr.send(
+              "user=" +
+                encodeURIComponent(username) +
+                "&pin=" +
+                encodeURIComponent(currentContext)
+            );
+          }
+        });
+    }
+
+    setInterval(updateContext, 2000);
+
+    function updatePinSidebar() {
+      Promise.all([
+        fetch("get_pins.php").then((res) => res.json()),
+        fetch("get_contexts.php").then((res) => res.json()),
+      ]).then(([pins, contexts]) => {
+        const pinListDiv = document.getElementById("pinList");
+        const myPinListDiv = document.getElementById("myPinList");
+        const showMoreToggle = document.getElementById("showMore");
+
+        const roomToUsers = {};
+        const contexts_lastSeen = {};
+
+        for (const [user, data] of Object.entries(contexts)) {
+          const room = data.room || "General";
+          const lastSeen = data.last_seen || 0;
+
+          if (!roomToUsers[room]) roomToUsers[room] = [];
+          roomToUsers[room].push(user);
+
+          contexts_lastSeen[user] = lastSeen;
+        }
+
+        const pinArray = Object.values(pins);
+        const userPins = pinArray.filter((pin) => pin.user === username);
+        const visibleCount = 5;
+        let showAllPins = showMoreToggle.dataset.expanded === "true";
+
+        pinListDiv.innerHTML = "";
+        (showAllPins ? pinArray : pinArray.slice(0, visibleCount)).forEach(
+          (pin) => {
+            const el = document.createElement("div");
+            el.style.marginBottom = "12px";
+            el.style.cursor = "pointer";
+            el.style.boxSizing = "border-box";
+            el.style.background = "#fff";
+            el.style.fontFamily = "'Inter', sans-serif";
+            el.style.fontSize = "14px";
+            el.style.position = "relative";
+            el.style.textAlign = "left";
+
+            if (currentContext === pin.title) {
+               el.style.textDecoration = "underline";
+               el.style.fontWeight = "bold";
+            }
+
+            el.innerHTML = `
+              <div style="text-align: left;">${pin.title}</div>
+            `;
+
+            el.addEventListener("click", () => {
+              x = pin.x;
+              y = pin.y;
+              moveAvatar();
+            });
+
+            // If this is your pin, show a little "x" delete
+            if (pin.user === username) {
+              const deleteBtn = document.createElement("div");
+              deleteBtn.innerText = "x";
+              deleteBtn.style.position = "absolute";
+              deleteBtn.style.top = "6px";
+              deleteBtn.style.right = "10px";
+              deleteBtn.style.fontSize = "14px";
+              deleteBtn.style.color = "#555";
+              deleteBtn.style.cursor = "pointer";
+
+              deleteBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                customConfirm(`Delete pin "${pin.title}"?`).then((confirmed) => {
+                  if (confirmed) {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", "delete_pin.php", true);
+                    xhr.setRequestHeader(
+                      "Content-type",
+                      "application/x-www-form-urlencoded"
+                    );
+                    xhr.send(
+                      "user=" +
+                        encodeURIComponent(username) +
+                        "&id=" +
+                        encodeURIComponent(pin.id)
+                    );
+                    setTimeout(updatePinSidebar, 500);
+                  }
+                });
+              });
+
+              el.appendChild(deleteBtn);
+            }
+
+            pinListDiv.appendChild(el);
+          }
+        );
+
+        showMoreToggle.onclick = () => {
+          showAllPins = !showAllPins;
+          showMoreToggle.innerText = showAllPins ? "Show Less" : "Show More";
+          showMoreToggle.dataset.expanded = showAllPins.toString();
+          updatePinSidebar();
+        };
+
+        // My Pins
+        if (userPins.length > 0) {
+          myPinListDiv.innerHTML = userPins.map((pin) => pin.title).join("<br>");
+        } else {
+          myPinListDiv.innerText = "No Pins added";
+        }
+
+        // If inside a room, update the "Active" user box
+        if (insideRoom) {
+          updateRoomUsersBox(contexts);
+        }
+      });
+    }
+
+    setInterval(updatePinSidebar, 3000);
+
+    function enterRoom(pinTitle, pinX, pinY) {
+      insideRoom = true;
+      currentContext = pinTitle;
+      document.getElementById("chatTitle").innerText = "Room: " + pinTitle;
+      document.getElementById("backButton").style.display = "block";
+      document.getElementById("pinSidebar").classList.add("hidden");
+      document.getElementById("roomUsersBox").style.display = "block";
+document.getElementById("createPinBtn").style.display = "none"; // 👈 hide button
+
+      x = pinX;
+      y = pinY;
+      moveAvatar();
+      scrollToAvatar();
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "update_context.php", true);
+      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      xhr.send("user=" + encodeURIComponent(username) + "&pin=" + encodeURIComponent(currentContext));
+
+      // extra safeguard
+      setTimeout(() => {
+        insideRoom = true;
+      }, 100);
+
+      // Also reload chat for that room
+      loadMessages();
+      
+      console.log("Entering room");
+      
+    }
+
+    function exitRoom() {
+      insideRoom = false;
+      currentContext = "General";
+      document.getElementById("chatTitle").innerText = "Room: General";
+      document.getElementById("backButton").style.display = "none";
+      document.getElementById("pinSidebar").classList.remove("hidden");
+      document.getElementById("roomUsersBox").style.display = "none";
+      document.getElementById("createPinBtn").style.display = "block"; // 👈 show button again
+
+
+      x = 50 + Math.floor(Math.random() * 100);
+      y = 50 + Math.floor(Math.random() * 100);
+      moveAvatar();
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "update_context.php", true);
+      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      xhr.send("user=" + encodeURIComponent(username) + "&pin=General");
+
+      // Reload chat for General
+      loadMessages();
+    }
+
+    document.getElementById("backButton").addEventListener("click", exitRoom);
+
+    function updateRoomUsersBox(contexts) {
+      const usersList = document.getElementById("roomUsersList");
+      const users = Object.entries(contexts)
+        .filter(([user, data]) => data.room === currentContext)
+        .map(([user]) => user);
+
+      usersList.innerHTML = users
+        .map(
+          (user) => `
+            <div data-username="${user}" style="cursor: pointer; margin-bottom: 4px;">
+              ${user}
+              <span style="display:inline-block;width:8px;height:8px;background:green;border-radius:50%;margin-left:4px;"></span>
+            </div>
+          `
+        )
+        .join("");
+    }
+
+    // Renders *markdown style* formatting
+    function renderFormatted(text) {
+      // First, temporarily replace any existing <br> tags with a unique placeholder
+      text = text.replace(/<br>/g, '{{LINEBREAK}}');
+      
+      // Escape HTML
+      text = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Convert our placeholder back to <br> tags
+      text = text.replace(/{{LINEBREAK}}/g, "<br>");
+      
+      // Bold
+      text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      // Italic
+      text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+      // Link (markdown style)
+      text = text.replace(
+        /\[(.*?)\]\((https?:\/\/.*?)\)/g,
+        '<a href="$2" target="_blank">$1</a>'
+      );
+      
+      // Auto-detect plain URLs and convert them to links
+      text = text.replace(
+        /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
+        '<a href="$1" target="_blank">$1</a>'
+      );
+
+      // Convert newlines to <br> tags
+      text = text.replace(/\n/g, "<br>");
+
+      return text;
+    }
+
+    // Escape backticks etc. for the expand button
+     function escapeJS(str) {
+     return str
+    .replace(/\\/g, "\\\\") // escape backslashes
+    .replace(/`/g, "\\`")   // escape backticks
+    .replace(/\$/g, "\\$")  // escape dollar signs
+    .replace(/"/g, '\\"');  // escape double quotes (just in case)
+}
+
+    // Show full message modal
+    function showFullMessage(text) {
+      const content = document.getElementById("fullMessageContent");
+      content.innerHTML = renderFormatted(text);
+      document.getElementById("fullMessageModal").style.display = "flex";
+    }
+    
+    
+    ["click", "touchstart"].forEach(evt =>
+  document.getElementById("play-area").addEventListener(evt, function(e) {
+    if (!username) return;
+    const rect = this.getBoundingClientRect();
+    // For touch events, use the first touch point; otherwise use the event directly
+    const pos = e.touches ? e.touches[0] : e;
+    x = pos.clientX - rect.left;
+    y = pos.clientY - rect.top;
+    moveAvatar();
+  })
+);
+
+
+const chatBox = document.getElementById("chat");
+const chatHeader = document.getElementById("chatHeader");
+const chatArrow = document.getElementById("chatToggleArrow");
+
+chatHeader.addEventListener("click", () => {
+  chatBox.classList.toggle("collapsed");
+  chatArrow.textContent = chatBox.classList.contains("collapsed") ? "+" : "–";
+});
+
+// Object to store interval IDs for each DM
+let dmIntervals = {};
+// Keep track of minimized chats
+let minimizedChats = new Set();
+
+function checkUnreadDMs() {
+  fetch(`check_unread_dms.php?user=${encodeURIComponent(username)}`)
+    .then(res => res.json())
+    .then(data => {
+      let unreadFrom = Array.isArray(data) ? data : 
+                       data?.unread || data?.senders || 
+                       Object.values(data).find(Array.isArray) || [];
+      
+      // Add notification dots to usernames in the room users list
+      const usersList = document.getElementById('roomUsersList');
+      if (usersList) {
+        usersList.querySelectorAll('[data-username]').forEach(userElement => {
+          const targetUser = userElement.dataset.username;
+          if (targetUser === username) return;
+
+          const dmBox = document.getElementById("dm-" + targetUser);
+          const isMinimized = minimizedChats.has(targetUser);
+          const hasUnread = unreadFrom.includes(targetUser);
+          
+          // Handle chat bubble (minimized state)
+          if (isMinimized) {
+            if (!userElement.classList.contains('has-chat')) {
+              userElement.classList.add('has-chat');
+            }
+          } else {
+            userElement.classList.remove('has-chat');
+          }
+          
+          // Handle red dot (unread messages)
+          let notificationDot = userElement.querySelector('.dm-notification');
+          if (hasUnread && (!dmBox || dmBox.style.display === "none")) {
+            if (!notificationDot) {
+              notificationDot = document.createElement('span');
+              notificationDot.className = 'dm-notification';
+              userElement.appendChild(notificationDot);
+            }
+            notificationDot.style.opacity = '1';
+            notificationDot.style.display = 'inline-block';
+          } else if (notificationDot) {
+            notificationDot.style.opacity = '0';
+            setTimeout(() => {
+              notificationDot.style.display = 'none';
+            }, 300);
+          }
+          
+          // If we have a minimized chat with this sender, update its messages
+          if (isMinimized && hasUnread) {
+            loadDM(targetUser);
+          }
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error checking unread DMs:', error);
+    });
+}
+
+// Increase check frequency for more responsive notifications
+setInterval(checkUnreadDMs, 2000);
+
+function startDM(targetUser) {
+  if (targetUser === username) return;
+  
+  const existingDM = document.getElementById("dm-" + targetUser);
+  if (existingDM) {
+    existingDM.style.display = "flex";
+    minimizedChats.delete(targetUser);
+    
+    // Remove both notification types when opening chat
+    const userElement = document.querySelector(`[data-username="${targetUser}"]`);
+    if (userElement) {
+      userElement.classList.remove('has-chat');
+      const notificationDot = userElement.querySelector('.dm-notification');
+      if (notificationDot) {
+        notificationDot.style.opacity = '0';
+        setTimeout(() => {
+          notificationDot.style.display = 'none';
+        }, 300);
+      }
+    }
+    
+    loadDM(targetUser);
+    return;
+  }
+
+  const template = document.getElementById("dmChatTemplate");
+  const newChat = template.firstElementChild.cloneNode(true);
+  newChat.id = "dm-" + targetUser;
+  newChat.querySelector(".dm-username").innerText = targetUser;
+  
+  // Add event listeners
+  const input = newChat.querySelector(".dm-input");
+  const sendBtn = newChat.querySelector(".dm-send");
+  
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Allow shift+enter for line break
+        return;
+      }
+      e.preventDefault();
+      sendDM(targetUser);
+    }
+  });
+  
+  sendBtn.addEventListener("click", () => {
+    sendDM(targetUser);
+  });
+  
+  document.body.appendChild(newChat);
+  loadDM(targetUser);
+  
+  // Start polling for new messages
+  if (!dmIntervals[targetUser]) {
+    dmIntervals[targetUser] = setInterval(() => {
+      // Only update visible chats or those with new messages
+      const dmBox = document.getElementById("dm-" + targetUser);
+      if (dmBox && (dmBox.style.display !== "none" || minimizedChats.has(targetUser))) {
+        loadDM(targetUser);
+      }
+    }, 1000);
+  }
+  
+  // Focus input
+  input.focus();
+}
+
+function closeDM(closeBtn) {
+  const box = closeBtn.closest(".dm-chat-box");
+  if (box && box.id.startsWith("dm-")) {
+    const targetUser = box.id.substring(3);
+    box.style.display = "none";
+    minimizedChats.add(targetUser);
+    
+    // Check for unread messages immediately when minimizing
+    checkUnreadDMs();
+    
+    // Add chat bubble to the username
+    const userElement = document.querySelector(`[data-username="${targetUser}"]`);
+    if (userElement && !userElement.classList.contains('has-chat')) {
+      userElement.classList.add('has-chat');
+    }
+  }
+}
+
+function sendDM(targetUser) {
+  const dmBox = document.getElementById("dm-" + targetUser);
+  const input = dmBox.querySelector(".dm-input");
+  const message = input.value.trim();
+  
+  if (!message) return;
+  
+  // Clear input immediately
+  input.value = "";
+  
+  fetch("send_dm.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `from=${encodeURIComponent(username)}&to=${encodeURIComponent(targetUser)}&message=${encodeURIComponent(message)}`
+  })
+  .then(() => {
+    loadDM(targetUser);
+  })
+  .catch(error => {
+    console.error("Error sending DM:", error);
+  });
+}
+
+function loadDM(targetUser) {
+  const dmBox = document.getElementById("dm-" + targetUser);
+  if (!dmBox) return;
+  
+  const messagesContainer = dmBox.querySelector(".dm-messages");
+  
+  fetch(`read_dm.php?from=${encodeURIComponent(username)}&to=${encodeURIComponent(targetUser)}`)
+    .then(res => res.json())
+    .then(messages => {
+      // If chat is minimized, update the messages container but don't show them yet
+      if (minimizedChats.has(targetUser)) {
+        // Store the messages for when we reopen
+        dmBox.dataset.pendingMessages = JSON.stringify(messages);
+        return;
+      }
+      
+      messagesContainer.innerHTML = "";
+      
+      if (!messages || messages.length === 0) {
+        messagesContainer.innerHTML = '<div class="message">No messages yet</div>';
+        return;
+      }
+      
+      messages.forEach(msg => {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${msg.from === username ? "sent" : "received"}`;
+        msgDiv.textContent = msg.text;
+        messagesContainer.appendChild(msgDiv);
+      });
+      
+      // Scroll to bottom if chat is visible
+      if (dmBox.style.display !== "none") {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    });
+}
+
+// Add click handler for usernames in room
+document.addEventListener("click", (e) => {
+  const userElement = e.target.closest("[data-username]");
+  if (userElement) {
+    const targetUser = userElement.dataset.username;
+    if (targetUser && targetUser !== username) {
+      startDM(targetUser);
+    }
+  }
+});
+
+  </script>
+
+  <!-- Custom Confirmation Modal -->
+  <div
+    id="customConfirmOverlay"
+    style="
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    "
+  >
+    <div
+      id="customConfirmBox"
+      style="
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 260px;
+        max-width: 90%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        font-family: sans-serif;
+      "
+    >
+      <div id="customConfirmMessage" style="margin-bottom: 20px;"></div>
+      <button
+        id="customConfirmYes"
+        style="
+          padding: 6px 12px;
+          background: black;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 8px;
+        "
+      >
+        Yes
+      </button>
+      <button
+        id="customConfirmNo"
+        style="
+          padding: 6px 12px;
+          background: #f0f0f0;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Custom Prompt Modal -->
+<div id="customPromptOverlay" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+">
+  <div id="customPromptBox" style="
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      max-width: 90%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      text-align: center;
+      font-family: sans-serif;
+  ">
+    <div id="customPromptMessage" style="margin-bottom: 10px;">Enter a value</div>
+    <input id="customPromptInput" type="text" style="
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+    " />
+    <div>
+      <button id="customPromptOk" style="
+          padding: 6px 12px;
+          background: black;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 8px;
+      ">OK</button>
+      <button id="customPromptCancel" style="
+          padding: 6px 12px;
+          background: #f0f0f0;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+      ">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Full Message Modal -->
+  <div
+    id="fullMessageModal"
+    style="
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    "
+  >
+    <div
+      style="
+        background: white;
+        padding: 20px;
+        max-width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+        border-radius: 8px;
+        position: relative;
+      "
+    >
+      <button
+        onclick="document.getElementById('fullMessageModal').style.display='none'"
+        style="
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+        "
+      >
+        ×
+      </button>
+      <div
+        id="fullMessageContent"
+        style="white-space: pre-wrap; font-size: 14px;"
+      ></div>
+    </div>
+  </div>
+  
+  
+  <!-- DM Chat Template -->
+<div id="dmChatTemplate" style="display: none;">
+  <div class="dm-chat-box">
+    <div class="dm-header">
+      <span class="dm-username"></span>
+      <span class="dm-close" onclick="closeDM(this)">−</span>
+    </div>
+    <div class="dm-messages"></div>
+    <div class="dm-input-area">
+      <textarea class="dm-input" placeholder="Type a message..."></textarea>
+      <button class="dm-send">Send</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- DM Container -->
+<div id="dmContainer"></div>
+
+</body>
+</html>

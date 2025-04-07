@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pin</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background: white;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 6vw;
+      font-weight: 700;
+      color: black;
+      letter-spacing: 1px;
+    }
+
+    a {
+      text-decoration: none;
+      color: black;
+    }
+
+    .corner-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: black;
+      text-decoration: underline;
+      font-family: 'Inter', sans-serif;
+    }
+
+    @media (max-width: 600px) {
+      .corner-link {
+        font-size: 13px;
+        bottom: 16px;
+        right: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="chat.html"><h1>Pin</h1></a>
+
+  <a class="corner-link" href="about.html">What is Pin?</a>
+</body>
+</html>
