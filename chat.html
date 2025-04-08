@@ -435,6 +435,46 @@
   transition: opacity 0.3s ease;
 }
 
+/* Add styles for @ mentions */
+.mention {
+  color: #0066cc;
+  font-weight: 500;
+  background: rgba(0, 102, 204, 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+/* Add styles for mention notifications */
+.mention-notification {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+  margin-left: 4px;
+  position: absolute;
+  top: 0;
+  right: -12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(255, 0, 0, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
 @media screen and (max-width: 857px) {
   .dm-chat-box {
     width: calc(100% - 40px) !important;
@@ -445,7 +485,37 @@
   }
 }
 
+/* Add styles for the expand button */
+#expandButton, #dmExpandButton, .dm-expand-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 5px;
+  transition: transform 0.3s ease;
+}
 
+#expandButton:hover, #dmExpandButton:hover, .dm-expand-button:hover {
+  color: #333;
+}
+
+#expandButton.expanded, #dmExpandButton.expanded, .dm-expand-button.expanded {
+  transform: rotate(180deg);
+}
+
+/* Add transition for smooth height change */
+#chat, #dmContainer, .dm-chat-box {
+  transition: height 0.3s ease;
+}
+
+#chat.expanded, #dmContainer.expanded, .dm-chat-box.expanded {
+  height: 600px !important;
+}
+
+#chat.expanded #messages, #dmContainer.expanded #dmMessages, .dm-chat-box.expanded .dm-messages {
+  height: 500px !important;
+}
 
   </style>
 </head>
@@ -527,11 +597,15 @@
     align-items: center;
     justify-content: space-between;
     font-weight: bold;
+    position: relative;
   ">
     <!-- Chat Title on the left -->
     <span id="chatTitle">Room: General</span>
     <!-- Arrow on the right -->
-    <span id="chatToggleArrow" style="font-size: 16px;">–</span>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="expandButton">↑</button>
+      <span id="chatToggleArrow" style="font-size: 16px;">–</span>
+    </div>
   </div>
 
   <!-- 2) Wrap existing chat contents in a new #chatBody container -->
@@ -748,6 +822,92 @@
     let insideRoom = false;
     let currentContext = "General";
     
+    // Add a Set to track rooms where we've seen mentions
+    const seenMentionRooms = new Set();
+    
+    // Add mention notification system
+    function checkMentions() {
+      if (!username) return;
+      
+      // First get all pins to know which rooms to check
+      fetch("get_pins.php")
+        .then(res => res.json())
+        .then(pins => {
+          // Create an array of promises for each room's mentions
+          const mentionPromises = Object.values(pins).map(pin => 
+            fetch(`check_mentions.php?user=${encodeURIComponent(username)}&context=${encodeURIComponent(pin.title)}`)
+              .then(res => res.json())
+          );
+          
+          // Also check General room
+          mentionPromises.push(
+            fetch(`check_mentions.php?user=${encodeURIComponent(username)}&context=General`)
+              .then(res => res.json())
+          );
+          
+          // Wait for all mention checks to complete
+          Promise.all(mentionPromises)
+            .then(responses => {
+              // Combine all mentions from different rooms
+              const allMentions = responses.flatMap(response => response.mentions || []);
+              console.log('Debug - All mentions across rooms:', allMentions);
+              
+              // Update pin notifications
+              const pins = document.querySelectorAll('.pin');
+              console.log('Debug - Found pins:', Array.from(pins).map(pin => {
+                const title = pin.querySelector('strong')?.textContent;
+                return { title, hasStrong: !!pin.querySelector('strong') };
+              }));
+              
+              pins.forEach(pin => {
+                const titleElement = pin.querySelector('strong');
+                if (!titleElement) {
+                  console.log('Debug - Pin missing strong element:', pin);
+                  return;
+                }
+                
+                const pinTitle = titleElement.textContent;
+                console.log('Debug - Checking pin:', pinTitle);
+                
+                const hasMention = allMentions.some(m => {
+                  const match = m.context === pinTitle;
+                  console.log('Debug - Comparing contexts:', { 
+                    messageContext: m.context, 
+                    pinTitle, 
+                    matches: match,
+                    fullMention: m
+                  });
+                  return match;
+                });
+                
+                console.log('Debug - Pin status:', { pinTitle, hasMention, seenBefore: seenMentionRooms.has(pinTitle) });
+                
+                // Only add notification if we haven't seen mentions in this room before
+                let notificationDot = pin.querySelector('.mention-notification');
+                if (!notificationDot && hasMention && !seenMentionRooms.has(pinTitle)) {
+                  console.log('Debug - Creating notification for pin:', pinTitle);
+                  notificationDot = document.createElement('span');
+                  notificationDot.className = 'mention-notification';
+                  pin.appendChild(notificationDot);
+                } else if (notificationDot && !hasMention) {
+                  console.log('Debug - Removing notification from pin:', pinTitle);
+                  notificationDot.remove();
+                  seenMentionRooms.delete(pinTitle);
+                }
+              });
+            })
+            .catch(error => {
+              console.error('Error checking mentions:', error);
+            });
+        })
+        .catch(error => {
+          console.error('Error getting pins:', error);
+        });
+    }
+
+    // Start checking for mentions
+    setInterval(checkMentions, 3000);
+    
 // --- Normalization and banned word check ---
 
 function normalizeText(text) {
@@ -794,8 +954,19 @@ function sendMessage() {
       banUser(username);
       return;
     }
+    
+    // Process mentions with spaces
+    let processedText = text;
+    
+    // Check for mentions with spaces (enclosed in quotes)
+    const mentionRegex = /@["']([^"']+)["']/g;
+    processedText = processedText.replace(mentionRegex, (match, username) => {
+      // Keep the original format but ensure it's properly formatted
+      return match;
+    });
+    
     // Encode line breaks as a special character sequence that won't be affected by PHP
-    const encodedText = text.replace(/\n/g, "{{newline}}");
+    const encodedText = processedText.replace(/\n/g, "{{newline}}");
     
     // Otherwise, send the message as normal
     const xhr = new XMLHttpRequest();
@@ -838,6 +1009,9 @@ function login() {
 
   document.getElementById("pinSidebar").style.display = "block";
 
+  // Set initial position randomly across the page width
+  x = Math.floor(Math.random() * (window.innerWidth - 100)); // Leave some margin
+  y = 50 + Math.floor(Math.random() * 100);
   moveAvatar();
   scrollToAvatar();
   loadMessages();
@@ -990,7 +1164,7 @@ function login() {
 
             const usernameSpan = document.createElement("span");
             usernameSpan.className = "username";
-            usernameSpan.textContent = sender + ":";
+            usernameSpan.innerHTML = renderFormatted(sender + ":");
 
             const previewSpan = document.createElement("span");
             previewSpan.className = "chat-preview";
@@ -1004,7 +1178,7 @@ function login() {
               expandBtn.className = "expand-btn";
               expandBtn.textContent = "...";
               expandBtn.onclick = function() {
-                showFullMessage(message);
+                showFullMessage(message, sender);
               };
               previewSpan.appendChild(expandBtn);
             } else {
@@ -1382,7 +1556,7 @@ pinCollapseBtn.addEventListener("click", () => {
       document.getElementById("backButton").style.display = "block";
       document.getElementById("pinSidebar").classList.add("hidden");
       document.getElementById("roomUsersBox").style.display = "block";
-document.getElementById("createPinBtn").style.display = "none"; // 👈 hide button
+      document.getElementById("createPinBtn").style.display = "none";
 
       x = pinX;
       y = pinY;
@@ -1394,6 +1568,29 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
       xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       xhr.send("user=" + encodeURIComponent(username) + "&pin=" + encodeURIComponent(currentContext));
 
+      // Clear mention notification after 2 seconds
+      setTimeout(() => {
+        // Find all pins and look for the one with matching title
+        const pins = document.querySelectorAll('.pin');
+        pins.forEach(pin => {
+          const titleElement = pin.querySelector('strong');
+          if (titleElement && titleElement.textContent === pinTitle) {
+            const notificationDot = pin.querySelector('.mention-notification');
+            if (notificationDot) {
+              // Add fade-out transition
+              notificationDot.style.transition = 'opacity 0.3s ease';
+              notificationDot.style.opacity = '0';
+              // Remove the element after fade completes
+              setTimeout(() => {
+                notificationDot.remove();
+                // Add the room to seenMentionRooms to prevent re-adding the notification
+                seenMentionRooms.add(pinTitle);
+              }, 300);
+            }
+          }
+        });
+      }, 2000);
+
       // extra safeguard
       setTimeout(() => {
         insideRoom = true;
@@ -1403,7 +1600,6 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
       loadMessages();
       
       console.log("Entering room");
-      
     }
 
     function exitRoom() {
@@ -1413,10 +1609,10 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
       document.getElementById("backButton").style.display = "none";
       document.getElementById("pinSidebar").classList.remove("hidden");
       document.getElementById("roomUsersBox").style.display = "none";
-      document.getElementById("createPinBtn").style.display = "block"; // 👈 show button again
+      document.getElementById("createPinBtn").style.display = "block";
 
-
-      x = 50 + Math.floor(Math.random() * 100);
+      // Set position randomly across the page width when exiting a room
+      x = Math.floor(Math.random() * (window.innerWidth - 100)); // Leave some margin
       y = 50 + Math.floor(Math.random() * 100);
       moveAvatar();
 
@@ -1424,6 +1620,9 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
       xhr.open("POST", "update_context.php", true);
       xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       xhr.send("user=" + encodeURIComponent(username) + "&pin=General");
+
+      // Don't clear seenMentionRooms when exiting to General
+      // This will prevent notifications from reappearing
 
       // Reload chat for General
       loadMessages();
@@ -1463,6 +1662,13 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
       // Convert our placeholder back to <br> tags
       text = text.replace(/{{LINEBREAK}}/g, "<br>");
       
+      // Handle @ mentions with spaces (enclosed in quotes)
+      text = text.replace(/@"([^"]+)"/g, '<span class="mention">@"$1"</span>');
+      text = text.replace(/@'([^']+)'/g, '<span class="mention">@\'$1\'</span>');
+      
+      // Handle standard @ mentions
+      text = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+      
       // Bold
       text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
       // Italic
@@ -1495,9 +1701,11 @@ document.getElementById("createPinBtn").style.display = "none"; // 👈 hide but
 }
 
     // Show full message modal
-    function showFullMessage(text) {
+    function showFullMessage(text, sender) {
       const content = document.getElementById("fullMessageContent");
+      const usernameElement = document.getElementById("fullMessageUsername");
       content.innerHTML = renderFormatted(text);
+      usernameElement.innerHTML = renderFormatted(sender);
       document.getElementById("fullMessageModal").style.display = "flex";
     }
     
@@ -1639,6 +1847,10 @@ function startDM(targetUser) {
   });
   
   document.body.appendChild(newChat);
+  
+  // Setup the expand button for this DM
+  setupDMExpandButton(newChat);
+  
   loadDM(targetUser);
   
   // Start polling for new messages
@@ -1746,6 +1958,47 @@ document.addEventListener("click", (e) => {
     }
   }
 });
+
+// Add expand button functionality for both chat and DM
+function setupExpandButton(buttonId, containerId, messagesId) {
+  document.getElementById(buttonId).addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent triggering the header click
+    const container = document.getElementById(containerId);
+    const expandButton = this;
+    
+    container.classList.toggle('expanded');
+    expandButton.classList.toggle('expanded');
+    
+    // Scroll to bottom after expanding
+    if (container.classList.contains('expanded')) {
+      setTimeout(() => {
+        const messages = document.getElementById(messagesId);
+        messages.scrollTop = messages.scrollHeight;
+      }, 300);
+    }
+  });
+}
+
+// Setup expand buttons for both chat and DM
+setupExpandButton('expandButton', 'chat', 'messages');
+
+// Function to setup DM expand button
+function setupDMExpandButton(dmBox) {
+  const expandButton = dmBox.querySelector('.dm-expand-button');
+  const messagesContainer = dmBox.querySelector('.dm-messages');
+  
+  expandButton.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dmBox.classList.toggle('expanded');
+    expandButton.classList.toggle('expanded');
+    
+    if (dmBox.classList.contains('expanded')) {
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 300);
+    }
+  });
+}
 
   </script>
 
@@ -1884,20 +2137,33 @@ document.addEventListener("click", (e) => {
         position: relative;
       "
     >
-      <button
-        onclick="document.getElementById('fullMessageModal').style.display='none'"
-        style="
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background: none;
-          border: none;
-          font-size: 18px;
-          cursor: pointer;
-        "
-      >
-        ×
-      </button>
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      ">
+        <div id="fullMessageUsername" style="
+          font-weight: bold;
+          color: blue;
+          font-size: 16px;
+        "></div>
+        <button
+          onclick="document.getElementById('fullMessageModal').style.display='none'"
+          style="
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            color: #666;
+          "
+        >
+          ×
+        </button>
+      </div>
       <div
         id="fullMessageContent"
         style="white-space: pre-wrap; font-size: 14px;"
@@ -1911,7 +2177,10 @@ document.addEventListener("click", (e) => {
   <div class="dm-chat-box">
     <div class="dm-header">
       <span class="dm-username"></span>
-      <span class="dm-close" onclick="closeDM(this)">−</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="dm-expand-button">↑</button>
+        <span class="dm-close" onclick="closeDM(this)">−</span>
+      </div>
     </div>
     <div class="dm-messages"></div>
     <div class="dm-input-area">

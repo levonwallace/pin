@@ -1,0 +1,30 @@
+[
+    {
+        "from": "mike",
+        "to": "it's me",
+        "text": "hey",
+        "timestamp": 1744083675,
+        "unread": false
+    },
+    {
+        "from": "mike",
+        "to": "it's me",
+        "text": "yo",
+        "timestamp": 1744084218,
+        "unread": false
+    },
+    {
+        "from": "mike",
+        "to": "it's me",
+        "text": "its not working",
+        "timestamp": 1744086247,
+        "unread": false
+    },
+    {
+        "from": "it's me",
+        "to": "mike",
+        "text": "yoooo",
+        "timestamp": 1744086666,
+        "unread": false
+    }
+]
