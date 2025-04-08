@@ -4,6 +4,8 @@ if (isset($_POST['user']) && isset($_POST['title']) && isset($_POST['x']) && iss
     $title = htmlspecialchars($_POST['title']);
     $x = intval($_POST['x']);
     $y = intval($_POST['y']);
+    $type = isset($_POST['type']) ? htmlspecialchars($_POST['type']) : 'text';
+    $audioUrl = isset($_POST['audioUrl']) ? htmlspecialchars($_POST['audioUrl']) : null;
 
     $file = 'pins.json';
 
@@ -20,8 +22,13 @@ if (isset($_POST['user']) && isset($_POST['title']) && isset($_POST['x']) && iss
         'title' => $title,
         'user' => $user,
         'x' => $x,
-        'y' => $y
+        'y' => $y,
+        'type' => $type
     ];
+
+    if ($type === 'audio' && $audioUrl) {
+        $pins[$id]['audioUrl'] = $audioUrl;
+    }
 
     file_put_contents($file, json_encode($pins));
 }
