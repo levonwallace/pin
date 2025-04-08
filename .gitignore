@@ -1,0 +1,25 @@
+# Composer dependencies
+vendor/
+composer.lock
+
+# S3Manager local cache
+cache/
+
+# OS generated files
+.DS_Store
+._*
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo 
+
+# pin dirs
+dms/
+chat_*.txt
+pins.json
+positions.json
+banned.json
+last_seen.json
+contexts.json
