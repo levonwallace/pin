@@ -20,6 +20,9 @@ mkdir -p cache
 # Set proper permissions for cache directory
 chmod 755 cache
 
+# Give execute permissions to upload_local_data_to_s3.sh
+chmod +x pin/upload_local_data_to_s3.sh
+
 # Start PHP server
 echo -e "${GREEN}Starting PHP server...${NC}"
 echo -e "${YELLOW}The application will be available at: http://localhost:8000${NC}"
