@@ -14,6 +14,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <script src="audio-pin.js"></script>
 
   <style>
     /* Target all input fields specifically */
@@ -1746,6 +1747,134 @@ document.addEventListener("click", (e) => {
     }
   }
 });
+
+// Initialize AudioPinManager
+const audioManager = new AudioPinManager();
+
+// Add audio pin creation function
+async function createAudioPin(x, y) {
+    const audioUrl = prompt("Enter the audio URL (must be CORS-enabled or will use proxy):");
+    if (!audioUrl) return;
+    
+    const title = prompt("Enter a title for this audio pin:");
+    if (!title) return;
+
+    try {
+        // Initialize audio context before creating pin
+        audioManager.initAudioContext();
+        
+        const pin = await audioManager.createAudioPin(x, y, audioUrl, title);
+        
+        // Send pin data to server
+        const formData = new FormData();
+        formData.append('user', username);
+        formData.append('title', title);
+        formData.append('x', x);
+        formData.append('y', y);
+        formData.append('type', 'audio');
+        formData.append('audioUrl', audioUrl);
+
+        fetch('create_pin.php', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            console.log("Pin created on server:", response);
+        }).catch(error => {
+            console.error("Error saving pin to server:", error);
+        });
+    } catch (error) {
+        console.error('Error creating audio pin:', error);
+        alert('Error creating audio pin. If using an external URL, it must be CORS-enabled or will use the proxy.');
+    }
+}
+
+// Add audio pin button to the interface
+const audioButton = document.createElement('button');
+audioButton.textContent = '🎵';
+audioButton.style.position = 'fixed';
+audioButton.style.bottom = '20px';
+audioButton.style.left = '20px';
+audioButton.style.padding = '10px';
+audioButton.style.borderRadius = '50%';
+audioButton.style.border = '2px solid black';
+audioButton.style.background = 'white';
+audioButton.style.cursor = 'pointer';
+audioButton.style.zIndex = '1000';
+
+audioButton.addEventListener('click', () => {
+    const x = Math.random() * 14000; // Random x position
+    const y = Math.random() * (window.innerHeight - 100); // Random y position
+    createAudioPin(x, y);
+});
+
+document.body.appendChild(audioButton);
+
+// Load existing audio pins from server
+function loadAudioPins() {
+    fetch('get_pins.php')
+        .then(response => response.json())
+        .then(pins => {
+            console.log("Loaded pins from server:", pins);
+            
+            // Filter for audio pins
+            const audioPins = Object.values(pins).filter(pin => pin.type === 'audio');
+            console.log("Found audio pins:", audioPins);
+            
+            // Create audio pins
+            audioPins.forEach(pin => {
+                try {
+                    audioManager.createAudioPin(pin.x, pin.y, pin.audioUrl, pin.title)
+                        .then(createdPin => {
+                            console.log("Created audio pin from server data:", createdPin);
+                        })
+                        .catch(error => {
+                            console.error("Error creating audio pin from server data:", error);
+                        });
+                } catch (error) {
+                    console.error("Error processing audio pin:", error);
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error loading pins from server:", error);
+        });
+}
+
+// Load audio pins when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Load existing audio pins
+    loadAudioPins();
+});
+
+// Update audio positions on mousemove
+document.addEventListener('mousemove', (e) => {
+    audioManager.updateAudioPositions(e.clientX, e.clientY);
+});
+
+// Add a function to check if user is in a pin's area
+function checkUserInPinArea() {
+    const playArea = document.getElementById('play-area');
+    if (!playArea) return;
+    
+    // Get the current scroll position
+    const scrollX = playArea.scrollLeft;
+    const scrollY = playArea.scrollTop;
+    
+    // Calculate the user's position in the play area
+    const userX = scrollX + (window.innerWidth / 2);
+    const userY = scrollY + (window.innerHeight / 2);
+    
+    // Update audio positions based on user's position
+    audioManager.updateAudioPositions(userX, userY);
+}
+
+// Check user position periodically
+setInterval(checkUserInPinArea, 1000);
+
+// Initialize audio context on first user interaction
+document.addEventListener('click', () => {
+    audioManager.initAudioContext();
+}, { once: true });
 
   </script>
 
