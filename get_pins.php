@@ -1,9 +1,17 @@
 <?php
-$file = 'pins.json';
-if (file_exists($file)) {
-    header('Content-Type: application/json');
-    echo file_get_contents($file);
-} else {
-    echo "{}";
+// Include the configuration file
+require_once 'config.php';
+
+$filename = 'pins.json';
+
+// Read pins from S3
+$json = s3ReadFile('pins', $filename);
+if ($json === false) {
+    $json = '{}';
 }
+
+// Return the pins as JSON
+header('Content-Type: application/json');
+echo $json;
+exit;
 ?>

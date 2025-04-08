@@ -15,11 +15,13 @@ if ! command -v php &> /dev/null; then
 fi
 
 # Create necessary directories if they don't exist
-mkdir -p dms
+mkdir -p cache
 
-# Set proper permissions for JSON files
-touch pins.json positions.json contexts.json last_seen.json banned.json
-chmod 666 pins.json positions.json contexts.json last_seen.json banned.json
+# Set proper permissions for cache directory
+chmod 755 cache
+
+# Give execute permissions to upload_local_data_to_s3.sh
+chmod +x pin/upload_local_data_to_s3.sh
 
 # Start PHP server
 echo -e "${GREEN}Starting PHP server...${NC}"
